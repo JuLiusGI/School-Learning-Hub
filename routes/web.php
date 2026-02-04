@@ -8,6 +8,7 @@ use App\Http\Controllers\GradeController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonResourceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\SectionController;
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('assessments', AssessmentController::class)->except(['show']);
     Route::resource('assessment-items', AssessmentItemController::class)->except(['show']);
     Route::resource('scores', ScoreController::class)->except(['show']);
+    Route::resource('reports', ReportController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

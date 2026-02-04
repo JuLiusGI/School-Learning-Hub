@@ -34,4 +34,9 @@ class Section extends Model
     {
         return $this->hasMany(Assessment::class);
     }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
 }

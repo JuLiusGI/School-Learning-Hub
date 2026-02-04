@@ -42,6 +42,9 @@
                     <x-nav-link :href="route('scores.index')" :active="request()->routeIs('scores.*')">
                         {{ __('Scores') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                        {{ __('Reports') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('sections.index')" :active="request()->routeIs('sections.*')">
                         {{ __('Sections') }}
                     </x-nav-link>
@@ -137,6 +140,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('scores.index')" :active="request()->routeIs('scores.*')">
                 {{ __('Scores') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                {{ __('Reports') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('sections.index')" :active="request()->routeIs('sections.*')">
                 {{ __('Sections') }}
