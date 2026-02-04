@@ -26,4 +26,9 @@ class Competency extends Model
     {
         return $this->belongsTo(Grade::class);
     }
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class);
+    }
 }

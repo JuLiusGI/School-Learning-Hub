@@ -11,6 +11,7 @@ Hi! This is a teacher-only, desktop-first web app for Bobon B Elementary School.
 - Admin and teacher accounts
 - School years, grades, sections, students, enrollments
 - Subjects and MATATAG competencies (curriculum mapping)
+- Lessons and resource library (uploads)
 
 ## Setup
 ### Requirements
@@ -31,6 +32,7 @@ Update `.env` with your database credentials, then run:
 php artisan migrate --seed
 npm install
 npm run build
+php artisan storage:link
 php artisan serve
 ```
 

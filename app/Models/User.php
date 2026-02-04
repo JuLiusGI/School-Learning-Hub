@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->role === 'teacher';
     }
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class, 'created_by');
+    }
 }

@@ -3,6 +3,8 @@
 use App\Http\Controllers\CompetencyController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GradeController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\LessonResourceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolYearController;
 use App\Http\Controllers\SectionController;
@@ -31,6 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('enrollments', EnrollmentController::class)->except(['show']);
     Route::resource('subjects', SubjectController::class)->except(['show']);
     Route::resource('competencies', CompetencyController::class)->except(['show']);
+    Route::resource('lessons', LessonController::class)->except(['show']);
+    Route::resource('lesson-resources', LessonResourceController::class)->except(['show']);
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

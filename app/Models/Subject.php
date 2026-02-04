@@ -17,4 +17,9 @@ class Subject extends Model
     {
         return $this->hasMany(Competency::class);
     }
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class);
+    }
 }
