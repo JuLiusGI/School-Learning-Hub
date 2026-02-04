@@ -79,6 +79,10 @@ class LessonResourceController extends Controller
             'file' => ['nullable', 'file', 'max:10240'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $lessonResource)) {
+            return $conflict;
+        }
+
         $data = [
             'lesson_id' => $validated['lesson_id'],
             'title' => $validated['title'],

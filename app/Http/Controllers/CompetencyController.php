@@ -105,6 +105,10 @@ class CompetencyController extends Controller
             ],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $competency)) {
+            return $conflict;
+        }
+
         $competency->update($validated);
 
         return redirect()->route('competencies.index');

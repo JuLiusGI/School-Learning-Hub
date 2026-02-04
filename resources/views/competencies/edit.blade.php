@@ -12,6 +12,7 @@
                     <form method="POST" action="{{ route('competencies.update', $competency) }}" class="space-y-6">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="updated_at" value="{{ $competency->updated_at?->toDateTimeString() }}">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>

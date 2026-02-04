@@ -85,6 +85,10 @@ class AssessmentController extends Controller
             'date_given' => ['required', 'date'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $assessment)) {
+            return $conflict;
+        }
+
         $assessment->update($validated);
 
         return redirect()->route('assessments.index');

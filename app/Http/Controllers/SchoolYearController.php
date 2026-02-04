@@ -65,6 +65,10 @@ class SchoolYearController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $schoolYear)) {
+            return $conflict;
+        }
+
         $schoolYear->update([
             'name' => $validated['name'],
             'start_date' => $validated['start_date'],

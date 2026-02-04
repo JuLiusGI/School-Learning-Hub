@@ -12,6 +12,7 @@
                     <form method="POST" action="{{ route('lesson-resources.update', $lessonResource) }}" class="space-y-6" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="updated_at" value="{{ $lessonResource->updated_at?->toDateTimeString() }}">
 
                         <div>
                             <x-input-label for="lesson_id" value="Lesson" />

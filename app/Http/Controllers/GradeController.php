@@ -50,6 +50,10 @@ class GradeController extends Controller
             'level' => ['required', 'string', 'max:50', Rule::unique('grades', 'level')->ignore($grade->id)],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $grade)) {
+            return $conflict;
+        }
+
         $grade->update($validated);
 
         return redirect()->route('grades.index');

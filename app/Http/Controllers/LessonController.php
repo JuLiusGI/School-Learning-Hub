@@ -107,6 +107,10 @@ class LessonController extends Controller
             'assessment_method' => ['nullable', 'string'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $lesson)) {
+            return $conflict;
+        }
+
         $lesson->update($validated);
 
         return redirect()->route('lessons.index');

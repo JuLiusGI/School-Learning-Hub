@@ -74,6 +74,10 @@ class AssessmentItemController extends Controller
             'points' => ['required', 'integer', 'min:0'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $assessmentItem)) {
+            return $conflict;
+        }
+
         $assessmentItem->update($validated);
 
         return redirect()->route('assessment-items.index');

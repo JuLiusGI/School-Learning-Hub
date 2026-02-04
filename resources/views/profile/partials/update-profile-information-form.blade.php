@@ -9,13 +9,14 @@
         </p>
     </header>
 
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
+    <form id="send-verification" method="post" action="{{ route('verification.send') }}" data-offline="false">
         @csrf
     </form>
 
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
+        <input type="hidden" name="updated_at" value="{{ $user->updated_at?->toDateTimeString() }}">
 
         <div>
             <x-input-label for="name" :value="__('Name')" />

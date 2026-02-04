@@ -12,6 +12,7 @@
                     <form method="POST" action="{{ route('assessment-items.update', $assessmentItem) }}" class="space-y-6">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="updated_at" value="{{ $assessmentItem->updated_at?->toDateTimeString() }}">
 
                         <div>
                             <x-input-label for="assessment_id" value="Assessment" />

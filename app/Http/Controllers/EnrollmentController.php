@@ -97,6 +97,10 @@ class EnrollmentController extends Controller
             ],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $enrollment)) {
+            return $conflict;
+        }
+
         $enrollment->update($validated);
 
         return redirect()->route('enrollments.index');

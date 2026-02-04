@@ -14,6 +14,7 @@ use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\SyncController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('assessment-items', AssessmentItemController::class)->except(['show']);
     Route::resource('scores', ScoreController::class)->except(['show']);
     Route::resource('reports', ReportController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::post('sync/queue', [SyncController::class, 'store'])->name('sync.queue');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

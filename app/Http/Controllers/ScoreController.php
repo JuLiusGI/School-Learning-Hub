@@ -125,6 +125,10 @@ class ScoreController extends Controller
             'remarks' => ['nullable', 'string', 'max:255'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $score)) {
+            return $conflict;
+        }
+
         $assessment = Assessment::query()
             ->with('lesson')
             ->findOrFail($validated['assessment_id']);

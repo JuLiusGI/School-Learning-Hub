@@ -59,6 +59,10 @@ class StudentController extends Controller
             'birthdate' => ['nullable', 'date'],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $student)) {
+            return $conflict;
+        }
+
         $student->update($validated);
 
         return redirect()->route('students.index');

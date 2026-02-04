@@ -50,6 +50,10 @@ class SubjectController extends Controller
             'name' => ['required', 'string', 'max:100', Rule::unique('subjects', 'name')->ignore($subject->id)],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $subject)) {
+            return $conflict;
+        }
+
         $subject->update($validated);
 
         return redirect()->route('subjects.index');

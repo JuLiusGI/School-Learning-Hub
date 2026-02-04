@@ -84,6 +84,10 @@ class SectionController extends Controller
             ],
         ]);
 
+        if ($conflict = $this->ensureNoConflict($request, $section)) {
+            return $conflict;
+        }
+
         $section->update($validated);
 
         return redirect()->route('sections.index');

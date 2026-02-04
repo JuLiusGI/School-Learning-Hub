@@ -12,6 +12,7 @@
                     <form method="POST" action="{{ route('enrollments.update', $enrollment) }}" class="space-y-6">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="updated_at" value="{{ $enrollment->updated_at?->toDateTimeString() }}">
 
                         <div>
                             <x-input-label for="school_year_id" value="School Year" />
