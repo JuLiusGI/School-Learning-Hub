@@ -12,6 +12,7 @@ Hi! This is a teacher-only, desktop-first web app for Bobon B Elementary School.
 - School years, grades, sections, students, enrollments
 - Subjects and MATATAG competencies (curriculum mapping)
 - Lessons and resource library (uploads)
+- Assessments, items, and scoring
 
 ## Setup
 ### Requirements

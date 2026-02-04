@@ -33,6 +33,15 @@
                     <x-nav-link :href="route('lesson-resources.index')" :active="request()->routeIs('lesson-resources.*')">
                         {{ __('Resources') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('assessments.index')" :active="request()->routeIs('assessments.*')">
+                        {{ __('Assessments') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('assessment-items.index')" :active="request()->routeIs('assessment-items.*')">
+                        {{ __('Assessment Items') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('scores.index')" :active="request()->routeIs('scores.*')">
+                        {{ __('Scores') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('sections.index')" :active="request()->routeIs('sections.*')">
                         {{ __('Sections') }}
                     </x-nav-link>
@@ -119,6 +128,15 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('lesson-resources.index')" :active="request()->routeIs('lesson-resources.*')">
                 {{ __('Resources') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('assessments.index')" :active="request()->routeIs('assessments.*')">
+                {{ __('Assessments') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('assessment-items.index')" :active="request()->routeIs('assessment-items.*')">
+                {{ __('Assessment Items') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('scores.index')" :active="request()->routeIs('scores.*')">
+                {{ __('Scores') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('sections.index')" :active="request()->routeIs('sections.*')">
                 {{ __('Sections') }}

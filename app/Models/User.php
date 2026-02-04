@@ -62,4 +62,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Lesson::class, 'created_by');
     }
+
+    public function scores()
+    {
+        return $this->hasMany(Score::class, 'recorded_by');
+    }
 }

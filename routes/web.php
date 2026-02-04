@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\AssessmentItemController;
 use App\Http\Controllers\CompetencyController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GradeController;
@@ -7,6 +9,7 @@ use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonResourceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolYearController;
+use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
@@ -35,6 +38,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('competencies', CompetencyController::class)->except(['show']);
     Route::resource('lessons', LessonController::class)->except(['show']);
     Route::resource('lesson-resources', LessonResourceController::class)->except(['show']);
+    Route::resource('assessments', AssessmentController::class)->except(['show']);
+    Route::resource('assessment-items', AssessmentItemController::class)->except(['show']);
+    Route::resource('scores', ScoreController::class)->except(['show']);
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
