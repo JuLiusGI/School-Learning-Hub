@@ -58,6 +58,22 @@ class User extends Authenticatable
         return $this->role === 'teacher';
     }
 
+    public function isHeadTeacher(): bool
+    {
+        return $this->role === 'head_teacher';
+    }
+
+    public function advisedSections()
+    {
+        return $this->hasMany(Section::class, 'adviser_user_id');
+    }
+
+    public function assignedSections()
+    {
+        return $this->belongsToMany(Section::class)
+            ->withTimestamps();
+    }
+
     public function lessons()
     {
         return $this->hasMany(Lesson::class, 'created_by');

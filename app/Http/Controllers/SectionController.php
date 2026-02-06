@@ -14,10 +14,16 @@ class SectionController extends Controller
 {
     public function index(): View
     {
-        $sections = Section::query()
+        $query = Section::query()
             ->with(['grade', 'adviser'])
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null) {
+            $query->whereIn('id', $sectionIds);
+        }
+
+        $sections = $query->get();
 
         return view('sections.index', [
             'sections' => $sections,
@@ -26,6 +32,10 @@ class SectionController extends Controller
 
     public function create(): View
     {
+        if (request()->user()?->isTeacher()) {
+            abort(403);
+        }
+
         return view('sections.create', [
             'grades' => Grade::query()->orderBy('level')->get(),
             'advisers' => User::query()
@@ -38,6 +48,10 @@ class SectionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->user()?->isTeacher()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'grade_id' => ['required', 'exists:grades,id'],
@@ -57,6 +71,10 @@ class SectionController extends Controller
 
     public function edit(Section $section): View
     {
+        if (request()->user()?->isTeacher()) {
+            abort(403);
+        }
+
         return view('sections.edit', [
             'section' => $section,
             'grades' => Grade::query()->orderBy('level')->get(),
@@ -70,6 +88,10 @@ class SectionController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
+        if ($request->user()?->isTeacher()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'grade_id' => ['required', 'exists:grades,id'],
@@ -95,6 +117,10 @@ class SectionController extends Controller
 
     public function destroy(Section $section): RedirectResponse
     {
+        if (request()->user()?->isTeacher()) {
+            abort(403);
+        }
+
         $section->delete();
 
         return redirect()->route('sections.index');

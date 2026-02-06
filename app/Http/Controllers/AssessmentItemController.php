@@ -17,8 +17,19 @@ class AssessmentItemController extends Controller
             ->orderBy('item_no');
 
         $assessmentId = $request->integer('assessment_id');
+        $sectionIds = $this->teacherSectionIds();
+
+        if ($sectionIds !== null) {
+            $query->whereHas('assessment', fn ($assessmentQuery) => $assessmentQuery->whereIn('section_id', $sectionIds));
+        }
 
         if ($assessmentId) {
+            if ($sectionIds !== null) {
+                $assessmentSectionId = Assessment::query()->whereKey($assessmentId)->value('section_id');
+                if ($assessmentSectionId && ! in_array($assessmentSectionId, $sectionIds, true)) {
+                    abort(403);
+                }
+            }
             $query->where('assessment_id', $assessmentId);
         }
 
@@ -26,7 +37,11 @@ class AssessmentItemController extends Controller
 
         return view('assessment_items.index', [
             'items' => $items,
-            'assessments' => Assessment::query()->with(['lesson', 'section'])->orderBy('title')->get(),
+            'assessments' => Assessment::query()
+                ->with(['lesson', 'section'])
+                ->when($sectionIds !== null, fn ($assessmentQuery) => $assessmentQuery->whereIn('section_id', $sectionIds))
+                ->orderBy('title')
+                ->get(),
             'filters' => [
                 'assessment_id' => $assessmentId,
             ],
@@ -35,8 +50,14 @@ class AssessmentItemController extends Controller
 
     public function create(Request $request): View
     {
+        $sectionIds = $this->teacherSectionIds();
+
         return view('assessment_items.create', [
-            'assessments' => Assessment::query()->with(['lesson', 'section'])->orderBy('title')->get(),
+            'assessments' => Assessment::query()
+                ->with(['lesson', 'section'])
+                ->when($sectionIds !== null, fn ($assessmentQuery) => $assessmentQuery->whereIn('section_id', $sectionIds))
+                ->orderBy('title')
+                ->get(),
             'selectedAssessmentId' => $request->integer('assessment_id'),
         ]);
     }
@@ -51,6 +72,11 @@ class AssessmentItemController extends Controller
             'points' => ['required', 'integer', 'min:0'],
         ]);
 
+        $assessmentSectionId = Assessment::query()->whereKey($validated['assessment_id'])->value('section_id');
+        if ($assessmentSectionId) {
+            $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $assessmentSectionId);
+        }
+
         AssessmentItem::create($validated);
 
         return redirect()->route('assessment-items.index');
@@ -58,9 +84,18 @@ class AssessmentItemController extends Controller
 
     public function edit(AssessmentItem $assessmentItem): View
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($assessmentItem->assessment?->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         return view('assessment_items.edit', [
             'assessmentItem' => $assessmentItem,
-            'assessments' => Assessment::query()->with(['lesson', 'section'])->orderBy('title')->get(),
+            'assessments' => Assessment::query()
+                ->with(['lesson', 'section'])
+                ->when($sectionIds !== null, fn ($assessmentQuery) => $assessmentQuery->whereIn('section_id', $sectionIds))
+                ->orderBy('title')
+                ->get(),
         ]);
     }
 
@@ -74,6 +109,11 @@ class AssessmentItemController extends Controller
             'points' => ['required', 'integer', 'min:0'],
         ]);
 
+        $assessmentSectionId = Assessment::query()->whereKey($validated['assessment_id'])->value('section_id');
+        if ($assessmentSectionId) {
+            $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $assessmentSectionId);
+        }
+
         if ($conflict = $this->ensureNoConflict($request, $assessmentItem)) {
             return $conflict;
         }
@@ -85,6 +125,11 @@ class AssessmentItemController extends Controller
 
     public function destroy(AssessmentItem $assessmentItem): RedirectResponse
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($assessmentItem->assessment?->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         $assessmentItem->delete();
 
         return redirect()->route('assessment-items.index');

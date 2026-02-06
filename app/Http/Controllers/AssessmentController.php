@@ -19,12 +19,18 @@ class AssessmentController extends Controller
 
         $lessonId = $request->integer('lesson_id');
         $sectionId = $request->integer('section_id');
+        $sectionIds = $this->teacherSectionIds();
+
+        if ($sectionIds !== null) {
+            $query->whereIn('section_id', $sectionIds);
+        }
 
         if ($lessonId) {
             $query->where('lesson_id', $lessonId);
         }
 
         if ($sectionId) {
+            $this->ensureTeacherSectionAccess($sectionIds, $sectionId);
             $query->where('section_id', $sectionId);
         }
 
@@ -33,7 +39,11 @@ class AssessmentController extends Controller
         return view('assessments.index', [
             'assessments' => $assessments,
             'lessons' => Lesson::query()->with(['subject', 'grade'])->orderBy('title')->get(),
-            'sections' => Section::query()->with('grade')->orderBy('name')->get(),
+            'sections' => Section::query()
+                ->with('grade')
+                ->when($sectionIds !== null, fn ($query) => $query->whereIn('id', $sectionIds))
+                ->orderBy('name')
+                ->get(),
             'filters' => [
                 'lesson_id' => $lessonId,
                 'section_id' => $sectionId,
@@ -43,9 +53,15 @@ class AssessmentController extends Controller
 
     public function create(): View
     {
+        $sectionIds = $this->teacherSectionIds();
+
         return view('assessments.create', [
             'lessons' => Lesson::query()->with(['subject', 'grade'])->orderBy('title')->get(),
-            'sections' => Section::query()->with('grade')->orderBy('name')->get(),
+            'sections' => Section::query()
+                ->with('grade')
+                ->when($sectionIds !== null, fn ($query) => $query->whereIn('id', $sectionIds))
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -60,6 +76,8 @@ class AssessmentController extends Controller
             'date_given' => ['required', 'date'],
         ]);
 
+        $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $validated['section_id']);
+
         Assessment::create($validated);
 
         return redirect()->route('assessments.index');
@@ -67,10 +85,19 @@ class AssessmentController extends Controller
 
     public function edit(Assessment $assessment): View
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($assessment->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         return view('assessments.edit', [
             'assessment' => $assessment->load(['lesson', 'section', 'items', 'scores.student']),
             'lessons' => Lesson::query()->with(['subject', 'grade'])->orderBy('title')->get(),
-            'sections' => Section::query()->with('grade')->orderBy('name')->get(),
+            'sections' => Section::query()
+                ->with('grade')
+                ->when($sectionIds !== null, fn ($query) => $query->whereIn('id', $sectionIds))
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -85,6 +112,8 @@ class AssessmentController extends Controller
             'date_given' => ['required', 'date'],
         ]);
 
+        $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $validated['section_id']);
+
         if ($conflict = $this->ensureNoConflict($request, $assessment)) {
             return $conflict;
         }
@@ -96,6 +125,11 @@ class AssessmentController extends Controller
 
     public function destroy(Assessment $assessment): RedirectResponse
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($assessment->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         $assessment->delete();
 
         return redirect()->route('assessments.index');

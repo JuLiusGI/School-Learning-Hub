@@ -25,6 +25,12 @@ class Section extends Model
         return $this->belongsTo(User::class, 'adviser_user_id');
     }
 
+    public function teachers()
+    {
+        return $this->belongsToMany(User::class)
+            ->withTimestamps();
+    }
+
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class);

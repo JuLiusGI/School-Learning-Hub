@@ -18,8 +18,19 @@ class LessonResourceController extends Controller
             ->orderByDesc('created_at');
 
         $lessonId = $request->integer('lesson_id');
+        $gradeIds = $this->teacherGradeIds();
+
+        if ($gradeIds !== null) {
+            $query->whereHas('lesson', fn ($lessonQuery) => $lessonQuery->whereIn('grade_id', $gradeIds));
+        }
 
         if ($lessonId) {
+            if ($gradeIds !== null) {
+                $lessonGradeId = Lesson::query()->whereKey($lessonId)->value('grade_id');
+                if ($lessonGradeId && ! in_array($lessonGradeId, $gradeIds, true)) {
+                    abort(403);
+                }
+            }
             $query->where('lesson_id', $lessonId);
         }
 
@@ -27,7 +38,10 @@ class LessonResourceController extends Controller
 
         return view('lesson_resources.index', [
             'resources' => $resources,
-            'lessons' => Lesson::query()->orderBy('title')->get(),
+            'lessons' => Lesson::query()
+                ->when($gradeIds !== null, fn ($lessonQuery) => $lessonQuery->whereIn('grade_id', $gradeIds))
+                ->orderBy('title')
+                ->get(),
             'filters' => [
                 'lesson_id' => $lessonId,
             ],
@@ -36,8 +50,14 @@ class LessonResourceController extends Controller
 
     public function create(): View
     {
+        $gradeIds = $this->teacherGradeIds();
+
         return view('lesson_resources.create', [
-            'lessons' => Lesson::query()->with(['subject', 'grade', 'schoolYear'])->orderBy('title')->get(),
+            'lessons' => Lesson::query()
+                ->with(['subject', 'grade', 'schoolYear'])
+                ->when($gradeIds !== null, fn ($lessonQuery) => $lessonQuery->whereIn('grade_id', $gradeIds))
+                ->orderBy('title')
+                ->get(),
         ]);
     }
 
@@ -49,6 +69,11 @@ class LessonResourceController extends Controller
             'type' => ['required', 'string', 'max:50'],
             'file' => ['required', 'file', 'max:10240'],
         ]);
+
+        $lessonGradeId = Lesson::query()->whereKey($validated['lesson_id'])->value('grade_id');
+        if ($lessonGradeId) {
+            $this->ensureTeacherGradeAccess($this->teacherGradeIds(), (int) $lessonGradeId);
+        }
 
         $path = $request->file('file')->store('lesson-resources');
 
@@ -64,9 +89,18 @@ class LessonResourceController extends Controller
 
     public function edit(LessonResource $lessonResource): View
     {
+        $gradeIds = $this->teacherGradeIds();
+        if ($gradeIds !== null && ! in_array($lessonResource->lesson?->grade_id, $gradeIds, true)) {
+            abort(403);
+        }
+
         return view('lesson_resources.edit', [
             'lessonResource' => $lessonResource,
-            'lessons' => Lesson::query()->with(['subject', 'grade', 'schoolYear'])->orderBy('title')->get(),
+            'lessons' => Lesson::query()
+                ->with(['subject', 'grade', 'schoolYear'])
+                ->when($gradeIds !== null, fn ($lessonQuery) => $lessonQuery->whereIn('grade_id', $gradeIds))
+                ->orderBy('title')
+                ->get(),
         ]);
     }
 
@@ -78,6 +112,11 @@ class LessonResourceController extends Controller
             'type' => ['required', 'string', 'max:50'],
             'file' => ['nullable', 'file', 'max:10240'],
         ]);
+
+        $lessonGradeId = Lesson::query()->whereKey($validated['lesson_id'])->value('grade_id');
+        if ($lessonGradeId) {
+            $this->ensureTeacherGradeAccess($this->teacherGradeIds(), (int) $lessonGradeId);
+        }
 
         if ($conflict = $this->ensureNoConflict($request, $lessonResource)) {
             return $conflict;
@@ -101,6 +140,11 @@ class LessonResourceController extends Controller
 
     public function destroy(LessonResource $lessonResource): RedirectResponse
     {
+        $gradeIds = $this->teacherGradeIds();
+        if ($gradeIds !== null && ! in_array($lessonResource->lesson?->grade_id, $gradeIds, true)) {
+            abort(403);
+        }
+
         Storage::delete($lessonResource->file_path);
         $lessonResource->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Section;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,12 @@ class UserController extends Controller
 
     public function create(): View
     {
-        return view('users.create');
+        return view('users.create', [
+            'sections' => Section::query()
+                ->with('grade')
+                ->orderBy('name')
+                ->get(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -32,17 +38,22 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,teacher'],
+            'role' => ['required', 'in:admin,head_teacher,teacher'],
             'status' => ['required', 'in:active,inactive'],
+            'section_ids' => ['array'],
+            'section_ids.*' => ['integer', 'exists:sections,id'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'status' => $validated['status'],
         ]);
+
+        $sectionIds = $validated['section_ids'] ?? [];
+        $user->assignedSections()->sync($validated['role'] === 'teacher' ? $sectionIds : []);
 
         return redirect()
             ->route('users.index');

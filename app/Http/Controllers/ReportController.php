@@ -18,12 +18,14 @@ class ReportController extends Controller
     public function index(Request $request): View
     {
         $reportType = $request->string('report_type')->toString();
+        $sectionIds = $this->teacherSectionIds();
 
         $reports = Report::query()
             ->with(['section.grade', 'schoolYear'])
             ->when($reportType, function ($query) use ($reportType) {
                 $query->where('report_type', $reportType);
             })
+            ->when($sectionIds !== null, fn ($query) => $query->whereIn('section_id', $sectionIds))
             ->orderByDesc('generated_at')
             ->get();
 
@@ -38,8 +40,14 @@ class ReportController extends Controller
 
     public function create(): View
     {
+        $sectionIds = $this->teacherSectionIds();
+
         return view('reports.create', [
-            'sections' => Section::query()->with('grade')->orderBy('name')->get(),
+            'sections' => Section::query()
+                ->with('grade')
+                ->when($sectionIds !== null, fn ($query) => $query->whereIn('id', $sectionIds))
+                ->orderBy('name')
+                ->get(),
             'schoolYears' => SchoolYear::query()->orderByDesc('is_active')->orderByDesc('start_date')->get(),
             'reportTypes' => $this->reportTypes(),
         ]);
@@ -52,6 +60,8 @@ class ReportController extends Controller
             'school_year_id' => ['required', 'exists:school_years,id'],
             'report_type' => ['required', 'in:assessment-summary,student-progress'],
         ]);
+
+        $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $validated['section_id']);
 
         $section = Section::query()->with('grade')->findOrFail($validated['section_id']);
         $schoolYear = SchoolYear::query()->findOrFail($validated['school_year_id']);
@@ -150,6 +160,11 @@ class ReportController extends Controller
 
     public function show(Report $report): View
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($report->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         return view('reports.show', [
             'report' => $report->load(['section.grade', 'schoolYear']),
             'payload' => $report->payload_json ?? [],
@@ -158,6 +173,11 @@ class ReportController extends Controller
 
     public function destroy(Report $report): RedirectResponse
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($report->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         $report->delete();
 
         return redirect()->route('reports.index');

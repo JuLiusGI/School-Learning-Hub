@@ -15,10 +15,16 @@ class EnrollmentController extends Controller
 {
     public function index(): View
     {
-        $enrollments = Enrollment::query()
+        $query = Enrollment::query()
             ->with(['student', 'section.grade', 'schoolYear'])
-            ->orderByDesc('school_year_id')
-            ->get();
+            ->orderByDesc('school_year_id');
+
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null) {
+            $query->whereIn('section_id', $sectionIds);
+        }
+
+        $enrollments = $query->get();
 
         return view('enrollments.index', [
             'enrollments' => $enrollments,
@@ -27,6 +33,8 @@ class EnrollmentController extends Controller
 
     public function create(): View
     {
+        $sectionIds = $this->teacherSectionIds();
+
         return view('enrollments.create', [
             'students' => Student::query()
                 ->orderBy('last_name')
@@ -34,6 +42,7 @@ class EnrollmentController extends Controller
                 ->get(),
             'sections' => Section::query()
                 ->with('grade')
+                ->when($sectionIds !== null, fn ($query) => $query->whereIn('id', $sectionIds))
                 ->orderBy('name')
                 ->get(),
             'schoolYears' => SchoolYear::query()
@@ -51,6 +60,8 @@ class EnrollmentController extends Controller
             'school_year_id' => ['required', 'exists:school_years,id'],
         ]);
 
+        $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $validated['section_id']);
+
         $request->validate([
             'student_id' => [
                 Rule::unique('enrollments', 'student_id')->where(fn ($query) => $query->where('school_year_id', $validated['school_year_id'])),
@@ -64,6 +75,12 @@ class EnrollmentController extends Controller
 
     public function edit(Enrollment $enrollment): View
     {
+        $sectionIds = $this->teacherSectionIds();
+
+        if ($sectionIds !== null && ! in_array($enrollment->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         return view('enrollments.edit', [
             'enrollment' => $enrollment,
             'students' => Student::query()
@@ -72,6 +89,7 @@ class EnrollmentController extends Controller
                 ->get(),
             'sections' => Section::query()
                 ->with('grade')
+                ->when($sectionIds !== null, fn ($query) => $query->whereIn('id', $sectionIds))
                 ->orderBy('name')
                 ->get(),
             'schoolYears' => SchoolYear::query()
@@ -88,6 +106,8 @@ class EnrollmentController extends Controller
             'section_id' => ['required', 'exists:sections,id'],
             'school_year_id' => ['required', 'exists:school_years,id'],
         ]);
+
+        $this->ensureTeacherSectionAccess($this->teacherSectionIds(), (int) $validated['section_id']);
 
         $request->validate([
             'student_id' => [
@@ -108,6 +128,11 @@ class EnrollmentController extends Controller
 
     public function destroy(Enrollment $enrollment): RedirectResponse
     {
+        $sectionIds = $this->teacherSectionIds();
+        if ($sectionIds !== null && ! in_array($enrollment->section_id, $sectionIds, true)) {
+            abort(403);
+        }
+
         $enrollment->delete();
 
         return redirect()->route('enrollments.index');

@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900">
                     <div class="flex items-center justify-between mb-6">
                         <div class="text-sm text-gray-600">
-                            Manage teacher and admin accounts.
+                            Manage teacher, head teacher, and admin accounts.
                         </div>
                         <a href="{{ route('users.create') }}">
                             <x-primary-button>

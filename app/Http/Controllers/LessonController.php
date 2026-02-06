@@ -23,12 +23,18 @@ class LessonController extends Controller
         $subjectId = $request->integer('subject_id');
         $gradeId = $request->integer('grade_id');
         $schoolYearId = $request->integer('school_year_id');
+        $gradeIds = $this->teacherGradeIds();
+
+        if ($gradeIds !== null) {
+            $query->whereIn('grade_id', $gradeIds);
+        }
 
         if ($subjectId) {
             $query->where('subject_id', $subjectId);
         }
 
         if ($gradeId) {
+            $this->ensureTeacherGradeAccess($gradeIds, $gradeId);
             $query->where('grade_id', $gradeId);
         }
 
@@ -38,10 +44,15 @@ class LessonController extends Controller
 
         $lessons = $query->get();
 
+        $gradeQuery = Grade::query()->orderBy('level');
+        if ($gradeIds !== null) {
+            $gradeQuery->whereIn('id', $gradeIds);
+        }
+
         return view('lessons.index', [
             'lessons' => $lessons,
             'subjects' => Subject::query()->orderBy('name')->get(),
-            'grades' => Grade::query()->orderBy('level')->get(),
+            'grades' => $gradeQuery->get(),
             'schoolYears' => SchoolYear::query()->orderByDesc('is_active')->orderByDesc('start_date')->get(),
             'filters' => [
                 'subject_id' => $subjectId,
@@ -53,10 +64,20 @@ class LessonController extends Controller
 
     public function create(): View
     {
+        $gradeIds = $this->teacherGradeIds();
+        $gradeQuery = Grade::query()->orderBy('level');
+        if ($gradeIds !== null) {
+            $gradeQuery->whereIn('id', $gradeIds);
+        }
+
         return view('lessons.create', [
             'subjects' => Subject::query()->orderBy('name')->get(),
-            'grades' => Grade::query()->orderBy('level')->get(),
-            'competencies' => Competency::query()->with(['subject', 'grade'])->orderBy('code')->get(),
+            'grades' => $gradeQuery->get(),
+            'competencies' => Competency::query()
+                ->with(['subject', 'grade'])
+                ->when($gradeIds !== null, fn ($query) => $query->whereIn('grade_id', $gradeIds))
+                ->orderBy('code')
+                ->get(),
             'schoolYears' => SchoolYear::query()->orderByDesc('is_active')->orderByDesc('start_date')->get(),
         ]);
     }
@@ -75,6 +96,8 @@ class LessonController extends Controller
             'assessment_method' => ['nullable', 'string'],
         ]);
 
+        $this->ensureTeacherGradeAccess($this->teacherGradeIds(), (int) $validated['grade_id']);
+
         $validated['created_by'] = Auth::id();
 
         Lesson::create($validated);
@@ -84,11 +107,25 @@ class LessonController extends Controller
 
     public function edit(Lesson $lesson): View
     {
+        $gradeIds = $this->teacherGradeIds();
+        if ($gradeIds !== null && ! in_array($lesson->grade_id, $gradeIds, true)) {
+            abort(403);
+        }
+
+        $gradeQuery = Grade::query()->orderBy('level');
+        if ($gradeIds !== null) {
+            $gradeQuery->whereIn('id', $gradeIds);
+        }
+
         return view('lessons.edit', [
             'lesson' => $lesson->load(['resources']),
             'subjects' => Subject::query()->orderBy('name')->get(),
-            'grades' => Grade::query()->orderBy('level')->get(),
-            'competencies' => Competency::query()->with(['subject', 'grade'])->orderBy('code')->get(),
+            'grades' => $gradeQuery->get(),
+            'competencies' => Competency::query()
+                ->with(['subject', 'grade'])
+                ->when($gradeIds !== null, fn ($query) => $query->whereIn('grade_id', $gradeIds))
+                ->orderBy('code')
+                ->get(),
             'schoolYears' => SchoolYear::query()->orderByDesc('is_active')->orderByDesc('start_date')->get(),
         ]);
     }
@@ -107,6 +144,8 @@ class LessonController extends Controller
             'assessment_method' => ['nullable', 'string'],
         ]);
 
+        $this->ensureTeacherGradeAccess($this->teacherGradeIds(), (int) $validated['grade_id']);
+
         if ($conflict = $this->ensureNoConflict($request, $lesson)) {
             return $conflict;
         }
@@ -118,6 +157,11 @@ class LessonController extends Controller
 
     public function destroy(Lesson $lesson): RedirectResponse
     {
+        $gradeIds = $this->teacherGradeIds();
+        if ($gradeIds !== null && ! in_array($lesson->grade_id, $gradeIds, true)) {
+            abort(403);
+        }
+
         $lesson->delete();
 
         return redirect()->route('lessons.index');

@@ -37,16 +37,29 @@
 
                         <div>
                             <x-input-label for="role" value="Role" />
-                            <select id="role" name="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                            <select id="role" name="role" class="mt-1 block w-full border-[#1a4731]/30 focus:border-[#1a4731] focus:ring-[#1a4731] rounded-md shadow-sm bg-[#fefefe] text-[#1a4731]" required>
                                 <option value="teacher" @selected(old('role') === 'teacher')>Teacher</option>
+                                <option value="head_teacher" @selected(old('role') === 'head_teacher')>Head Teacher</option>
                                 <option value="admin" @selected(old('role') === 'admin')>Admin</option>
                             </select>
                             <x-input-error class="mt-2" :messages="$errors->get('role')" />
                         </div>
 
                         <div>
+                            <x-input-label for="section_ids" value="Assigned Sections (Teachers only)" />
+                            <select id="section_ids" name="section_ids[]" multiple class="mt-1 block w-full border-[#1a4731]/30 focus:border-[#1a4731] focus:ring-[#1a4731] rounded-md shadow-sm bg-[#fefefe] text-[#1a4731]">
+                                @foreach ($sections as $section)
+                                    <option value="{{ $section->id }}" @selected(in_array($section->id, old('section_ids', [])))>
+                                        {{ $section->grade->level }} - {{ $section->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->get('section_ids')" />
+                        </div>
+
+                        <div>
                             <x-input-label for="status" value="Status" />
-                            <select id="status" name="status" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                            <select id="status" name="status" class="mt-1 block w-full border-[#1a4731]/30 focus:border-[#1a4731] focus:ring-[#1a4731] rounded-md shadow-sm bg-[#fefefe] text-[#1a4731]" required>
                                 <option value="active" @selected(old('status') === 'active')>Active</option>
                                 <option value="inactive" @selected(old('status') === 'inactive')>Inactive</option>
                             </select>
@@ -57,7 +70,7 @@
                             <x-primary-button>
                                 Save User
                             </x-primary-button>
-                            <a href="{{ route('users.index') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                            <a href="{{ route('users.index') }}" class="text-sm text-[#1a4731]/80 hover:text-[#1a4731]">
                                 Cancel
                             </a>
                         </div>
